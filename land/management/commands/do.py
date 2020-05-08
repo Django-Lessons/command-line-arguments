@@ -33,13 +33,21 @@ class Command(BaseCommand):
             )
         )
         parser.add_argument(
-            '--title',
+            '-t', '--title',
         )
         parser.add_argument(
-            '--description',
+            '-d', '--description',
+        )
+        parser.add_argument(
+            '--debug',
+            action="store_true"
         )
 
-    def create(self, model, title, description):
+    def create(self, model, title, description, verbose):
+        if verbose:
+            self.stdout.write(
+                f"Creating {model}"
+            )
         model_class = apps.get_model(
             app_label='land',
             model_name=model
@@ -48,8 +56,16 @@ class Command(BaseCommand):
             title=title,
             description=description
         )
+        if verbose:
+            self.stdout.write(
+                "create complete"
+            )
 
-    def list(self, model):
+    def list(self, model, verbose):
+        if verbose:
+            self.stdout.write(
+                f"listing {model}"
+            )
         model_class = apps.get_model(
             app_label='land',
             model_name=model
@@ -58,17 +74,22 @@ class Command(BaseCommand):
             self.stdout.write(
                 f"{model.capitalize()} {p.title} {p.description}"
             )
+        if verbose:
+            self.stdout.write(
+                "listing complete"
+            )
 
     def handle(self, *args, **options):
         op = options.get('operation')
         model = options.get('model')
         title = options.get('title')
         description = options.get('description')
+        verbose = options.get('debug')
 
         if op == CREATE:
-            self.create(model, title, description)
+            self.create(model, title, description, verbose)
         if op == LIST:
-            self.list(model)
+            self.list(model, verbose)
 
         self.stdout.write(
             self.style.SUCCESS("Done! Success.")
