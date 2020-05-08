@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from land.models import Plan, Product
+from django.apps import apps
 
 
 CREATE = 'create'
@@ -40,29 +40,24 @@ class Command(BaseCommand):
         )
 
     def create(self, model, title, description):
-        if model == PRODUCT:
-            Product.objects.create(
-                title=title,
-                description=description
-            )
-        if model == PLAN:
-            Plan.objects.create(
-                title=title,
-                description=description
-            )
+        model_class = apps.get_model(
+            app_label='land',
+            model_name=model
+        )
+        model_class.objects.create(
+            title=title,
+            description=description
+        )
 
     def list(self, model):
-        if model == PRODUCT:
-            for p in Product.objects.all():
-                self.stdout.write(
-                    f"Product {p.title} {p.description}"
-                )
-
-        if model == PLAN:
-            for p in Plan.objects.all():
-                self.stdout.write(
-                    f"Plan {p.title} {p.description}"
-                )
+        model_class = apps.get_model(
+            app_label='land',
+            model_name=model
+        )
+        for p in model_class.objects.all():
+            self.stdout.write(
+                f"{model.capitalize()} {p.title} {p.description}"
+            )
 
     def handle(self, *args, **options):
         op = options.get('operation')
@@ -76,5 +71,5 @@ class Command(BaseCommand):
             self.list(model)
 
         self.stdout.write(
-            self.style.SUCCESS("Done! Success")
+            self.style.SUCCESS("Done! Success.")
         )

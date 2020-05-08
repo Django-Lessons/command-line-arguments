@@ -22,12 +22,3 @@ class Plan(models.Model):
         blank=True,
         null=True
     )
-    cycle = models.CharField(
-        max_length=24,
-        choices=(
-            ('m', 'Monthly'),
-            ('a', 'Annual'),
-            ('o', 'One Time')
-        )
-    )
-    price = models.IntegerField()
