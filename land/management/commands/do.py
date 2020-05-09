@@ -1,82 +1,61 @@
 from django.core.management.base import BaseCommand
 from django.apps import apps
-
+from land.models import Product, Plan
 
 CREATE = 'create'
-UPDATE = 'update'
 LIST = 'list'
+UPDATE = 'update'
 DELETE = 'delete'
 PRODUCT = 'product'
 PLAN = 'plan'
 
-
 class Command(BaseCommand):
-    help = 'Manage Products and Plans'
 
     def add_arguments(self, parser):
         parser.add_argument(
             'operation',
-            help="Operation to perform",
             choices=(
                 CREATE,
                 LIST,
-                DELETE,
-                UPDATE
+                UPDATE,
+                DELETE
             )
         )
         parser.add_argument(
             'model',
-            help="Model to operate onto",
             choices=(
                 PRODUCT,
                 PLAN,
             )
         )
         parser.add_argument(
-            '-t', '--title',
+            '-t', '--title', default="Default title"
         )
         parser.add_argument(
-            '-d', '--description',
-        )
-        parser.add_argument(
-            '--debug',
-            action="store_true"
+            '-d', '--description', default="Default description"
         )
 
-    def create(self, model, title, description, verbose):
-        if verbose:
-            self.stdout.write(
-                f"Creating {model}"
-            )
-        model_class = apps.get_model(
+    def get_model(self, model):
+        return apps.get_model(
             app_label='land',
             model_name=model
         )
+
+    def create(self, model, title, description):
+        self.stdout.write(f"Creating {model}...")
+        model_class = self.get_model(model)
         model_class.objects.create(
             title=title,
             description=description
         )
-        if verbose:
-            self.stdout.write(
-                "create complete"
-            )
 
-    def list(self, model, verbose):
-        if verbose:
+    def list(self, model):
+        self.stdout.write(f"Listing {model}...")
+        model_class = self.get_model(model)
+
+        for item in model_class.objects.all():
             self.stdout.write(
-                f"listing {model}"
-            )
-        model_class = apps.get_model(
-            app_label='land',
-            model_name=model
-        )
-        for p in model_class.objects.all():
-            self.stdout.write(
-                f"{model.capitalize()} {p.title} {p.description}"
-            )
-        if verbose:
-            self.stdout.write(
-                "listing complete"
+                f"Product: title={item.title} descr={item.description}"
             )
 
     def handle(self, *args, **options):
@@ -84,13 +63,17 @@ class Command(BaseCommand):
         model = options.get('model')
         title = options.get('title')
         description = options.get('description')
-        verbose = options.get('debug')
 
         if op == CREATE:
-            self.create(model, title, description, verbose)
-        if op == LIST:
-            self.list(model, verbose)
+            self.create(model, title, description)
 
-        self.stdout.write(
-            self.style.SUCCESS("Done! Success.")
-        )
+        if op == LIST:
+            self.list(model)
+
+        if op in (CREATE, LIST, UPDATE, DELETE):
+            self.stdout.write(
+                self.style.SUCCESS("Done! Success.")
+            )
+
+
+
